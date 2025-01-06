@@ -310,19 +310,19 @@ def analyze(file_id):
         # Verify database connection first
         try:
             db.session.execute(text('SELECT 1'))
-            logger.info("Database connection verified")
+            #logger.info("Database connection verified")
         except Exception as db_error:
-            logger.error(f"Database connection error: {str(db_error)}")
+            #logger.error(f"Database connection error: {str(db_error)}")
             db.session.rollback()
             flash('Unable to connect to database. Please try again.')
             return redirect(url_for('main.upload'))
             
         # Load file and verify ownership with detailed logging
         file = UploadedFile.query.filter_by(id=file_id, user_id=current_user.id).first()
-        logger.info(f"Database query completed. File found: {file is not None}")
+        #logger.info(f"Database query completed. File found: {file is not None}")
         
         if not file:
-            logger.error(f"File {file_id} not found or unauthorized access for user {current_user.id}")
+            #logger.error(f"File {file_id} not found or unauthorized access for user {current_user.id}")
             flash('File not found or unauthorized access')
             return redirect(url_for('main.upload'))
             
@@ -333,7 +333,6 @@ def analyze(file_id):
                 user_id=current_user.id
             ).order_by(Transaction.date).all()
             
-            logger.info(f"Successfully loaded {len(transactions)} transactions for file {file_id}")
             
             # Load accounts for the user
             accounts = Account.query.filter_by(
@@ -341,7 +340,6 @@ def analyze(file_id):
                 is_active=True
             ).all()
             
-            logger.info(f"Successfully loaded {len(accounts)} active accounts for user {current_user.id}")
             
             return render_template(
                 'analyze.html',

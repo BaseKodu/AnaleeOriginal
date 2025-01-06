@@ -8,6 +8,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey, Text, DateTime
 from sqlalchemy.orm import relationship
 from werkzeug.security import generate_password_hash, check_password_hash
+from enum import Enum
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -229,6 +230,47 @@ class Account(db.Model):
 
     def __repr__(self):
         return f'<Account {self.link}: {self.name}>'
+    
+class Category(Enum):
+    INCOME_STATEMENT = (1, 'Income Statement')
+    BALANCE_SHEET = (2, 'Balance Sheet')
+    
+    def __init__(self, id, label):
+        self.id = id
+        self.label = label
+
+    @classmethod
+    def get_by_code(cls, id):
+        for role in cls:
+            if role.id == id:
+                return role
+        return None
+    
+
+class SubCategory(Enum):
+    CURRENT_ASSET = (1, 'Current Asset', Category.BALANCE_SHEET)
+    CURRENT_LIABILITY = (2, 'Current Liability', Category.BALANCE_SHEET)
+    COST_OF_SALES = (3, 'Cost of Sales', Category.INCOME_STATEMENT)
+    EXPENSES = (4, 'Expenses', Category.INCOME_STATEMENT)
+    SALES = (5, 'Sales', Category.INCOME_STATEMENT)
+    NON_CURRENT_ASSETS = (6, 'Non-Current Assets', Category.BALANCE_SHEET)
+    NON_CURRENT_LIABILITIES = (7, 'Non-Current Liabilities', Category.BALANCE_SHEET)
+    EQUITY = (8, 'Equity', Category.BALANCE_SHEET)
+    TAX = (9, 'Tax', Category.INCOME_STATEMENT)
+    INCOME = (10, 'Income', Category.INCOME_STATEMENT)
+    
+    def __init__(self, id, label, category):
+        self.id = id
+        self.label = label
+        self.category = category
+
+    @classmethod
+    def get_by_code(cls, id):
+        for role in cls:
+            if role.id == id:
+                return role
+        return None
+    
 
 class CompanySettings(db.Model):
     __tablename__ = 'company_settings'

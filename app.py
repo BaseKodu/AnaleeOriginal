@@ -107,93 +107,28 @@ def create_app(env=os.environ.get('FLASK_ENV', 'production')):
         
         # Get appropriate database URL based on environment
         if env == 'development':
-            database_url = os.environ.get("DEV_DATABASE_URL", os.environ.get("DATABASE_URL"))
+            database_url = os.environ.get("DEV_DATABASE_URL", "sqlite:///dev.db")
             logger.info("Using development database configuration")
         else:
-            database_url = os.environ.get("DATABASE_URL")
-            
-        if not database_url:
-            logger.error("Database URL is not set for the current environment")
-            return None
-            
-        # Handle legacy database URL format
-        if database_url.startswith("postgres://"):
-            database_url = database_url.replace("postgres://", "postgresql://", 1)
-            logger.info("Converted legacy postgres:// URL format to postgresql://")
-
-        # Handle legacy database URL format
-        if database_url.startswith("postgres://"):
-            database_url = database_url.replace("postgres://", "postgresql://", 1)
-            logger.info("Converted legacy postgres:// URL format to postgresql://")
-            
-        # Verify database URL format
-        if not database_url.startswith(('postgresql://', 'postgres://')):
-            logger.error("Invalid database URL format")
-            return None
-            
-        # Configure logging for database operations with proper level
-        db_logger = logging.getLogger('sqlalchemy.engine')
-        db_logger.setLevel(logging.INFO)
+            database_url = os.environ.get("DATABASE_URL", "sqlite:///app.db")
         
-        # Verify database URL format
-        if not any(database_url.startswith(prefix) for prefix in ['postgresql://', 'postgres://']):
-            logger.error(f"Invalid database URL format")
-            return None
+        logger.info(f"Using database URL: {database_url}")
             
-        # Basic application configuration check
-        if not app.config:
-            logger.error("Flask app configuration missing")
-            return None
-            
-        # Configure Flask app with essential settings and enhanced database configuration
+        # Basic application configuration
         config = {
             'SECRET_KEY': os.environ.get("FLASK_SECRET_KEY", os.urandom(24).hex()),
             'SQLALCHEMY_DATABASE_URI': database_url,
             'SQLALCHEMY_TRACK_MODIFICATIONS': False,
             'TEMPLATES_AUTO_RELOAD': True,
             'SQLALCHEMY_ENGINE_OPTIONS': {
-                'pool_pre_ping': True,
-                'pool_size': 5,  # Reduced pool size for better stability
-                'pool_timeout': 30,  # Reduced timeout
-                'pool_recycle': 300,  # 5 minutes recycle
-                'max_overflow': 2,  # Reduced max overflow
                 'echo': True if env == 'testing' else False,
-                'echo_pool': 'debug' if env == 'testing' else False,
-                'connect_args': {
-                    'connect_timeout': 5,  # Reduced connect timeout
-                    'application_name': 'flask_app',
-                    'keepalives': 1,
-                    'keepalives_idle': 30,
-                    'keepalives_interval': 10,
-                    'keepalives_count': 5,
-                    'client_encoding': 'utf8',
-                    'options': '-c timezone=utc'
-                }
             }
         }
-    
-    # Environment-specific configuration
-        if env == 'testing':
-            config.update({
-                'TESTING': True,
-                'DEBUG': True,
-                'ENABLE_ROLLBACK_TESTS': True,
-                'SQLALCHEMY_DATABASE_URI': os.environ.get('TEST_DATABASE_URL', f"{database_url}_test"),
-                'RATELIMIT_STORAGE_URL': os.environ.get('TEST_DATABASE_URL', f"{database_url}_test")
-            })
-        else:
-            config.update({
-                'TESTING': False,
-                'DEBUG': False,
-                'ENABLE_ROLLBACK_TESTS': False,
-                'SQLALCHEMY_DATABASE_URI': database_url,
-                'RATELIMIT_STORAGE_URL': database_url
-            })
         
         app.config.update(config)
         logger.debug("Flask app configuration completed")
 
-        # Initialize Flask extensions with enhanced error handling
+        # Initialize Flask extensions
         try:
             db.init_app(app)
             migrate.init_app(app, db, directory='migrations')
