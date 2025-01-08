@@ -45,7 +45,7 @@ class UploadForm(FlaskForm):
                 logger.error(f"Error loading bank accounts: {str(e)}")
                 self.account.choices = []
 
-@historical_data.route('/')
+@historical_data.route('/home')
 @login_required
 def index():
     """Main historical data page"""

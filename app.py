@@ -99,10 +99,18 @@ def create_app(env=None):
             # Import blueprints
             from auth import auth
             from routes import main
+            from historical_data import historical_data
+            from bank_statements import bank_statements
+            from chat import chat
+            from reports import reports
 
             # Register blueprints
             app.register_blueprint(auth)
             app.register_blueprint(main)
+            app.register_blueprint(historical_data)
+            app.register_blueprint(bank_statements)
+            app.register_blueprint(chat)
+            app.register_blueprint(reports)
 
             # Ensure database tables exist
             db.create_all()
@@ -119,7 +127,7 @@ def main():
     try:
         app = create_app()
         if app:
-            port = int(os.environ.get('PORT', 5000))
+            port = int(os.environ.get('PORT', 5001))
             app.run(host='0.0.0.0', port=port)
         else:
             logger.error("Application creation failed")
