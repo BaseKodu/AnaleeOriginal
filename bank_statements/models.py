@@ -6,7 +6,7 @@ Implements secure isolation pattern
 from datetime import datetime
 from typing import Optional
 from sqlalchemy import Enum as SQLEnum, Text
-from models import db, User, Account, Transaction, BankStatementUpload
+from models import db, User, Account, Transaction, BankStatementUpload, UploadedFile
 
 # Import FinancialGoal from models
 from models import FinancialGoal

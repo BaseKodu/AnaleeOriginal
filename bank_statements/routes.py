@@ -73,6 +73,7 @@ def reconcile():
 @login_required
 def upload():
     """Handle bank statement upload with enhanced validation and error handling"""
+    print("upload part !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ")
     try:
         form = BankStatementUploadForm()
         logger.info(f"Processing bank statement upload request for user {current_user.id}")

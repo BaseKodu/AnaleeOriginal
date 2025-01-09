@@ -11,6 +11,7 @@ from wtforms.validators import DataRequired
 from datetime import datetime
 from sqlalchemy import func
 from models import Transaction
+from bank_statements.services import BankStatementService
 
 
 from models import (
@@ -37,8 +38,8 @@ class UploadForm(FlaskForm):
             try:
                 accounts = Account.query.filter(
                     Account.user_id == current_user.id,
-                    Account.link.ilike('ca.810%'),
-                    Account.is_active == True
+                    #Account.link.like('ca.810%'),
+                    #Account.is_active == True
                 ).order_by(Account.link).all()
 
                 logger.info(f"Found {len(accounts)} active bank accounts for user {current_user.id}")
@@ -482,22 +483,32 @@ def upload():
                         return jsonify({'success': False, 'error': 'Invalid file format'}), 400
                     flash('Invalid file format. Please upload a CSV or Excel file.', 'error')
                     return redirect(url_for('main.upload'))
+                
+                bank_statement_service = BankStatementService()
+                account_id = int(form.account.data)
+                success, response = bank_statement_service.process_upload(
+                    file=file,
+                    account_id=account_id,
+                    user_id=current_user.id
+                )
 
                 # Create upload record
-                uploaded_file = UploadedFile(
-                    filename=filename,
-                    user_id=current_user.id,
-                    upload_date=datetime.utcnow()
-                )
-                db.session.add(uploaded_file)
-                db.session.commit()
+                # uploaded_file = UploadedFile(
+                #     filename=filename,
+                #     user_id=current_user.id,
+                #     upload_date=datetime.utcnow()
+                # )
+                # db.session.add(uploaded_file)
+                # db.session.commit()
                 logger.info(f"File upload record created: {filename}")
+                
+                
 
                 if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                     return jsonify({
                         'success': True,
                         'message': 'File uploaded successfully',
-                        'file_id': uploaded_file.id
+                        #'file_id': uploaded_file.id
                     })
 
                 flash('File uploaded successfully')
