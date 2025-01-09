@@ -8,6 +8,10 @@ from werkzeug.utils import secure_filename
 from flask_wtf import FlaskForm
 from wtforms import FileField, SelectField, SubmitField
 from wtforms.validators import DataRequired
+from datetime import datetime
+from sqlalchemy import func
+from models import Transaction
+
 
 from models import (
     db, User, CompanySettings, Account, Transaction, 
@@ -71,28 +75,50 @@ def index():
 @main.route('/dashboard')
 @login_required
 def dashboard():
-    """Main dashboard view showing financial overview"""
-    try:
-        # Check company settings
-        company_settings = CompanySettings.query.filter_by(user_id=current_user.id).first()
-        if not company_settings:
-            flash('Please configure company settings first.')
-            return redirect(url_for('main.company_settings'))
-
-        # Get recent transactions
-        recent_transactions = Transaction.query.filter_by(user_id=current_user.id)\
-            .order_by(Transaction.date.desc())\
-            .limit(5)\
-            .all()
-
-        return render_template('dashboard.html',
-                            transactions=recent_transactions)
-
-    except Exception as e:
-        logger.error(f"Error loading dashboard: {str(e)}")
-        flash('Error loading dashboard data')
-        return render_template('dashboard.html', 
-                            transactions=[])
+    # Get current month's transactions
+    current_month = datetime.now().month
+    current_year = datetime.now().year
+    
+    # Calculate total income and expenses
+    monthly_transactions = Transaction.query.filter(
+        Transaction.user_id == current_user.id,
+        func.extract('month', Transaction.date) == current_month,
+        func.extract('year', Transaction.date) == current_year
+    ).all()
+    
+    total_income = sum(t.amount for t in monthly_transactions if t.amount > 0)
+    total_expenses = sum(abs(t.amount) for t in monthly_transactions if t.amount < 0)
+    
+    # Get last 6 months labels and data
+    monthly_labels = []
+    monthly_income = []
+    monthly_expenses = []
+    
+    for i in range(5, -1, -1):
+        month = (current_month - i) if current_month > i else (12 - (i - current_month))
+        year = current_year if current_month > i else current_year - 1
+        month_name = datetime(year, month, 1).strftime('%B')
+        monthly_labels.append(month_name)
+        
+        month_transactions = Transaction.query.filter(
+            Transaction.user_id == current_user.id,
+            func.extract('month', Transaction.date) == month,
+            func.extract('year', Transaction.date) == year
+        ).all()
+        
+        income = sum(t.amount for t in month_transactions if t.amount > 0)
+        expenses = sum(abs(t.amount) for t in month_transactions if t.amount < 0)
+        monthly_income.append(income)
+        monthly_expenses.append(expenses)
+    
+    return render_template('dashboard.html',
+        total_income=total_income,
+        total_expenses=total_expenses,
+        monthly_labels=monthly_labels,
+        monthly_income=monthly_income,
+        monthly_expenses=monthly_expenses,
+        transactions=monthly_transactions
+    )
 
 @main.route('/settings', methods=['GET', 'POST'])
 @login_required

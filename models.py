@@ -216,6 +216,47 @@ class CompanySettings(db.Model):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     user = relationship("User", back_populates="company_settings")
+    
+    def get_financial_year(self, date=None, year=None):
+        if date is None:
+            date = datetime.utcnow()
+        
+        if year is not None:
+            start_year = year
+        else:
+            if date.month > self.financial_year_end:
+                start_year = date.year
+            else:
+                start_year = date.year - 1
+        
+        end_year = start_year + 1
+        
+        if self.financial_year_end == 12:
+            start_date = datetime(start_year + 1, 1, 1)
+        else:
+            start_date = datetime(start_year, self.financial_year_end + 1, 1)
+        
+        if self.financial_year_end == 12:
+            end_date = datetime(end_year, 12, 31)
+        else:
+            if self.financial_year_end == 2:
+                last_day = 29 if end_year % 4 == 0 and (end_year % 100 != 0 or end_year % 400 == 0) else 28
+            elif self.financial_year_end in [4, 6, 9, 11]:
+                last_day = 30
+            else:
+                last_day = 31
+            
+            end_date = datetime(end_year, self.financial_year_end, last_day)
+        
+        return {
+            'start_date': start_date,
+            'end_date': end_date,
+            'start_year': start_year,
+            'end_year': end_year
+        }
+
+    def __repr__(self):
+        return f'<CompanySettings {self.company_name}>'
 
 class UploadedFile(db.Model):
     __tablename__ = 'uploaded_file'
