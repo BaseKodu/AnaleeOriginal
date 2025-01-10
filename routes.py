@@ -160,6 +160,25 @@ def settings():
         flash('Error accessing Chart of Accounts', 'error')
         return redirect(url_for('main.dashboard'))
 
+@main.route('/settings/import-charts', methods=['GET'])
+@login_required
+def import_chart_of_accounts():
+    admin_accounts = AdminChartOfAccounts.query.all()
+    for acc in admin_accounts:
+        account = Account(
+            link=acc.link,
+            name=acc.name,
+            category=acc.category,
+            sub_category=acc.sub_category,
+            account_code=acc.code,
+            user_id=current_user.id
+        )
+        db.session.add(account)
+    db.session.commit()
+    flash('Chart of Accounts imported successfully', 'success')
+    return redirect(url_for('main.settings'))
+
+
 @main.route('/company-settings', methods=['GET', 'POST'])
 @login_required
 def company_settings():
@@ -270,8 +289,8 @@ def analyze(file_id):
 
             if not accounts:
                 logger.warning(f"No active accounts found for user {current_user.id}")
-                flash('Please set up your Chart of Accounts first')
-                return redirect(url_for('main.settings'))
+                #flash('Please set up your Chart of Accounts first')
+                #return redirect(url_for('main.settings'))
 
             logger.info(f"Successfully loaded {len(accounts)} active accounts")
 

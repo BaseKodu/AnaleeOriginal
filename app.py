@@ -103,6 +103,7 @@ def create_app(env=None):
             from bank_statements import bank_statements
             from chat import chat
             from reports import reports
+            from admin import admin
 
             # Register blueprints
             app.register_blueprint(auth)
@@ -111,6 +112,7 @@ def create_app(env=None):
             app.register_blueprint(bank_statements)
             app.register_blueprint(chat)
             app.register_blueprint(reports)
+            app.register_blueprint(admin)
 
             # Ensure database tables exist
             db.create_all()
