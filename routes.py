@@ -12,13 +12,13 @@ from datetime import datetime
 from sqlalchemy import func
 from models import Transaction
 from bank_statements.services import BankStatementService
-
+from .predictive_features import PredictiveFeatures
 
 from models import (
     db, User, CompanySettings, Account, Transaction, 
     UploadedFile, AdminChartOfAccounts
 )
-from forms.company import CompanySettingsForm
+from .forms import AccountForm, CompanySettingsForm  # Ensure correct import paths
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -125,14 +125,15 @@ def dashboard():
 @login_required
 def settings():
     """Protected Chart of Accounts management"""
+    form = AccountForm()
     try:
-        if request.method == 'POST':
+        if request.method == 'POST' and form.validate_on_submit():
             account = Account(
-                link=request.form['link'],
-                name=request.form['name'],
-                category=request.form['category'],
-                sub_category=request.form.get('sub_category', ''),
-                account_code=request.form.get('account_code', ''),
+                link=form.link.data,
+                name=form.name.data,
+                category=form.category.data,
+                sub_category=form.sub_category.data,
+                account_code=form.account_code.data,
                 user_id=current_user.id
             )
             db.session.add(account)
@@ -147,37 +148,19 @@ def settings():
         ).all()
 
         # Get system-wide Chart of Accounts for reference
-        system_accounts = AdminChartOfAccounts.query.all()
+        #system_accounts = AdminChartOfAccounts.query.all()
 
         return render_template(
             'settings.html',
             accounts=accounts,
-            system_accounts=system_accounts
+            form=form,
+            #system_accounts=system_accounts
         )
     except Exception as e:
         logger.error(f'Error in settings route: {str(e)}')
         db.session.rollback()
         flash('Error accessing Chart of Accounts', 'error')
         return redirect(url_for('main.dashboard'))
-
-@main.route('/settings/import-charts', methods=['GET'])
-@login_required
-def import_chart_of_accounts():
-    admin_accounts = AdminChartOfAccounts.query.all()
-    for acc in admin_accounts:
-        account = Account(
-            link=acc.link,
-            name=acc.name,
-            category=acc.category,
-            sub_category=acc.sub_category,
-            account_code=acc.code,
-            user_id=current_user.id
-        )
-        db.session.add(account)
-    db.session.commit()
-    flash('Chart of Accounts imported successfully', 'success')
-    return redirect(url_for('main.settings'))
-
 
 @main.route('/company-settings', methods=['GET', 'POST'])
 @login_required
@@ -289,8 +272,8 @@ def analyze(file_id):
 
             if not accounts:
                 logger.warning(f"No active accounts found for user {current_user.id}")
-                #flash('Please set up your Chart of Accounts first')
-                #return redirect(url_for('main.settings'))
+                flash('Please set up your Chart of Accounts first')
+                return redirect(url_for('main.settings'))
 
             logger.info(f"Successfully loaded {len(accounts)} active accounts")
 

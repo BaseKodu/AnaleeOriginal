@@ -11,10 +11,8 @@ from werkzeug.security import generate_password_hash
 
 from . import auth
 from models import db, User
-from forms.auth import (
-    LoginForm, RequestPasswordResetForm, ResetPasswordForm, 
-    RegistrationForm
-)
+from ..forms import LoginForm, RequestPasswordResetForm, ResetPasswordForm, RegistrationForm
+
 
 # Configure logging
 logger = logging.getLogger(__name__)
