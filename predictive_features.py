@@ -13,6 +13,7 @@ import numpy as np
 from sqlalchemy import text
 from models import db, Transaction, Account
 from nlp_utils import get_openai_client
+from icecream import ic
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -48,12 +49,15 @@ class PredictiveFeatures:
             transactions = Transaction.query.filter(
                 Transaction.explanation.isnot(None)
             ).all()
+            ic(transactions)
 
             similar_transactions = []
             logger.info(f"Finding similar transactions for description: {description}")
 
             # Calculate semantic embeddings if client available and explanation provided
             current_embedding = None
+            
+            ic(self.client, explanation)
             if self.client and explanation:
                 try:
                     response = self.client.embeddings.create(
@@ -62,11 +66,11 @@ class PredictiveFeatures:
                         encoding_format="float"
                     )
                     current_embedding = response.data[0].embedding
-                    logger.info("Successfully generated embedding for current explanation")
+                    logger.info("Successfully generated embedding for current explanation: ")
                 except Exception as e:
                     logger.error(f"Error getting embeddings: {str(e)}")
                     current_embedding = None
-
+        
             for transaction in transactions:
                 # Skip if it's the same transaction
                 if transaction.description == description:
@@ -78,6 +82,7 @@ class PredictiveFeatures:
                     description.lower(), 
                     transaction.description.lower()
                 ).ratio()
+                ic("Original Description: ", description, "Transaction Description: ", transaction.description, "Ratio: ", text_ratio)
 
                 semantic_ratio = 1.0  # Default if no semantic comparison possible
 

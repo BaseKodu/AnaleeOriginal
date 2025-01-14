@@ -11,6 +11,7 @@ from typing import Optional, Tuple
 from datetime import datetime, timedelta
 import time
 from collections import deque
+from icecream import ic
 
 # Configure logging
 logging.basicConfig(
@@ -51,13 +52,17 @@ def get_openai_client() -> Optional[OpenAI]:
             return None
 
         # Initialize client with only api_key
+        ic("Before getting OpenAI Initialized")
         _openai_client = OpenAI(api_key=api_key)
+        ic("After OpenAI init")
         _last_client_init = time.time()
         logger.info("OpenAI client initialized")
 
+        ic(_openai_client)
         return _openai_client
 
     except Exception as e:
+        ic("Exception occurred while initializing OPENAI client", e)
         _last_client_error = str(e)
         _client_error_count += 1
         logger.error(f"OpenAI client initialization failed: {str(e)}")
