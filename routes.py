@@ -12,6 +12,7 @@ from datetime import datetime
 from sqlalchemy import func
 from models import Transaction
 from bank_statements.services import BankStatementService
+from predictive_features import PredictiveFeatures
 
 
 from models import (
@@ -347,6 +348,41 @@ def analyze(file_id):
         logger.exception("Full analyze route error:")
         flash('Error loading transaction data')
         return redirect(url_for('main.upload'))
+    
+    
+@main.route('/analyze/save-transaction/<int:transaction_id>', methods=['POST'])
+@login_required
+def save_transaction(transaction_id):
+    """Save transaction details with enhanced error handling"""
+    try:
+        data = request.get_json()
+        account_id = data.get('account_id', type=int)
+        explanation = data.get('explanation', '').strip()
+
+        if not account_id:
+            return jsonify({'error': 'Account is required'}), 400
+
+        transaction = Transaction.query.filter_by(
+            id=transaction_id,
+            user_id=current_user.id
+        ).first()
+
+        if not transaction:
+            return jsonify({'error': 'Transaction not found'}), 404
+
+        transaction.account_id = account_id
+        transaction.explanation = explanation
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': 'Transaction details saved successfully'
+        })
+
+    except Exception as e:
+        logger.error(f"Error saving transaction: {str(e)}")
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 @main.route('/analyze/similar-transactions', methods=['POST'])
 @login_required
