@@ -35,14 +35,18 @@ export class ExplanationHandler {
      * @param {HTMLTextAreaElement} textarea - The textarea element to set up
      */
     setupTextarea(textarea) {
-        const container = textarea.closest('.position-relative');
-        const helpText = container.querySelector('.form-text');
+        const container = textarea.closest('.explanation-container');
+        if (!container) {
+            console.error('Explanation container not found for textarea:', textarea);
+            return;
+        }
+        
         let timeoutId;
         let similarDescriptions = new Set();
 
         // Create character count element
         const charCount = document.createElement('span');
-        charCount.className = 'char-count';
+        charCount.className = 'char-count position-absolute bottom-0 end-0 small text-muted pe-2';
         container.appendChild(charCount);
 
         // Initialize textarea state

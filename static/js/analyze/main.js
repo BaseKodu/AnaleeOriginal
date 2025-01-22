@@ -47,10 +47,10 @@ class AnalyzeApplication {
         try {
             // Get core DOM elements
             this.form = document.getElementById('analyzeForm');
-            this.analysisSelects = document.querySelectorAll('.analysis-select');
+            this.analysisSelects = document.querySelectorAll('.form-select');
 
-            if (!this.form || !this.analysisSelects.length) {
-                throw new Error('Required DOM elements not found');
+            if (!this.form) {
+                throw new Error('Required form element not found');
             }
 
             // Initialize core modules

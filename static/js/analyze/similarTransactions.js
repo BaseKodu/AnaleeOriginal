@@ -10,7 +10,7 @@
  * - Visual feedback for similar transactions
  */
 
-import { debounce } from '../utils/debounce.js';
+import { debounce } from './debounce.js';
 
 export class SimilarTransactionHandler {
     /**
