@@ -60,9 +60,9 @@ def create_app(env=None):
             'TEMPLATES_AUTO_RELOAD': True,
             'WTF_CSRF_ENABLED': True,
             'WTF_CSRF_TIME_LIMIT': 3600,
-            'SESSION_COOKIE_SECURE': True,
+            'SESSION_COOKIE_SECURE': False,
             'SESSION_COOKIE_HTTPONLY': True,
-            'REMEMBER_COOKIE_SECURE': True,
+            'REMEMBER_COOKIE_SECURE': False,
             'REMEMBER_COOKIE_HTTPONLY': True
         })
 
